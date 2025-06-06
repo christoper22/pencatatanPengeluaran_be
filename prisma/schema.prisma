@@ -1,0 +1,128 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// table user
+model User {
+  id                String              @id @default(uuid()) @db.Char(36)
+  fullName          String?
+  username          String
+  email             String              @unique
+  password          String
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  deletedAt         DateTime?
+  connection        Connection[]
+  chat              Chat[]
+  transactionDetail TransactionDetail[]
+  grup              Grup[]
+}
+
+// table group for grouping user
+model Grup {
+  id          String        @id @default(uuid()) @db.Char(36)
+  groupName   String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime
+  userId      String?       @db.Char(36)
+  connection  Connection[]
+  chat        Chat[]
+  transaction Transaction[]
+  wallet      Wallet[]
+  User        User?         @relation(fields: [userId], references: [id])
+}
+
+// wallet for group
+model Wallet {
+  id                String              @id @default(uuid()) @db.Char(36)
+  grupId            String?             @db.Char(36)
+  name              String
+  amount            Decimal
+  target_amount     Decimal
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  deletedAt         DateTime
+  Grup              Grup?               @relation(fields: [grupId], references: [id])
+  transactionDetail TransactionDetail[]
+}
+
+// connection to group and user
+model Connection {
+  id        String   @id @default(uuid()) @db.Char(36)
+  userId    String?  @db.Char(36)
+  grupId    String?  @db.Char(36)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime
+  User      User?    @relation(fields: [userId], references: [id])
+  Grup      Grup?    @relation(fields: [grupId], references: [id])
+}
+
+// table chat for user in the group
+model Chat {
+  id        String   @id @default(uuid()) @db.Char(36)
+  userId    String?  @db.Char(36)
+  grupId    String?  @db.Char(36)
+  message   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime
+  User      User?    @relation(fields: [userId], references: [id])
+  Grup      Grup?    @relation(fields: [grupId], references: [id])
+}
+
+enum trasactionType {
+  IN
+  OUT
+}
+
+enum useType {
+  ALONE
+  TOGETHER
+}
+
+// write the transation outside group
+model Transaction {
+  id               String              @id @default(uuid()) @db.Char(36)
+  grupId           String?             @db.Char(36)
+  date             DateTime
+  amount           Decimal
+  type             trasactionType      @default(IN)
+  useType          useType             @default(TOGETHER)
+  note             String
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  deletedAt        DateTime
+  Grup             Grup?               @relation(fields: [grupId], references: [id])
+  transationDetail TransactionDetail[]
+}
+
+// detail for each person on this transaction
+model TransactionDetail {
+  id            String         @id @default(uuid()) @db.Char(36)
+  transactionId String?        @db.Char(36)
+  userId        String?        @db.Char(36)
+  walletId      String?        @db.Char(36)
+  date          DateTime
+  type          trasactionType @default(IN)
+  amount        Decimal
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  deletedAt     DateTime
+  Transaction   Transaction?   @relation(fields: [transactionId], references: [id])
+  User          User?          @relation(fields: [userId], references: [id])
+  Wallet        Wallet?        @relation(fields: [walletId], references: [id])
+}

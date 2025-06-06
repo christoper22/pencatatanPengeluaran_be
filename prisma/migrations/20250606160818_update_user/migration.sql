@@ -1,0 +1,8 @@
+-- AlterTable
+ALTER TABLE `Grup` ADD COLUMN `userId` CHAR(36) NULL;
+
+-- AlterTable
+ALTER TABLE `User` ADD COLUMN `fullName` VARCHAR(191) NULL;
+
+-- AddForeignKey
+ALTER TABLE `Grup` ADD CONSTRAINT `Grup_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;

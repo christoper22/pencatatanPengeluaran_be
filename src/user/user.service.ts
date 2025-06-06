@@ -1,0 +1,103 @@
+import { ConflictException, Injectable } from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { RegisterUserDto } from './dto/register-user.dto';
+import * as bcrypt from 'bcrypt';
+import { LoginUserDTO } from './dto/login-user.dto';
+import { JwtService } from '@nestjs/jwt';
+
+@Injectable()
+export class UserService {
+  constructor(
+    private prisma: PrismaService,
+    private jwtService: JwtService,
+  ) {}
+
+  // function for hashing password
+  async hashPassword(password: string): Promise<string> {
+    const saltRounds = 10;
+    const hashed = await bcrypt.hash(password, saltRounds);
+    return hashed;
+  }
+
+  async getUsers(search: string) {
+    const data = await this.prisma.user.findMany({
+      where: {
+        fullName: {
+          contains: search, // LIKE '%news%'
+        },
+      },
+    });
+
+    return { message: 'success get all user', data };
+  }
+
+  async getUserById(id: string) {
+    const data = await this.prisma.user.findUnique({
+      where: { id },
+    });
+
+    return { message: 'success get all user', data };
+  }
+
+  async register(data: RegisterUserDto) {
+    try {
+      const checkEmail = await this.prisma.user.findFirst({
+        where: {
+          OR: [{ username: data.username }, { email: data.email }],
+        },
+      });
+
+      if (checkEmail && checkEmail.username === data.username) {
+        throw new ConflictException('Username already in use');
+      }
+      if (checkEmail && checkEmail.email === data.email) {
+        throw new ConflictException('Email already in use');
+      }
+
+      const hashPassword = await this.hashPassword(data.password);
+      data.password = hashPassword;
+
+      const user = await this.prisma.user.create({ data });
+
+      return {
+        message: 'Register Successfully',
+        data: user,
+      };
+    } catch (error) {
+      console.log(error);
+      throw new ConflictException(error.response);
+    }
+  }
+
+  async login(data: LoginUserDTO) {
+    try {
+      const findUser = await this.prisma.user.findFirst({
+        where: { username: data.username },
+      });
+
+      if (!findUser) {
+        throw new ConflictException('username not found');
+      }
+
+      // compare password
+      const checkPassword = await bcrypt.compare(
+        data.password,
+        findUser?.password,
+      );
+      if (!checkPassword) {
+        throw new ConflictException('Wrong Password');
+      }
+
+      const token = this.jwtService.sign({ userId: findUser.id });
+
+      return {
+        message: 'Login Successfully',
+        data: token,
+      };
+      // create token
+    } catch (error) {
+      console.log(error);
+      throw new ConflictException(error.response);
+    }
+  }
+}
