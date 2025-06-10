@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Body,
   Controller,
@@ -19,7 +20,7 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  findAll(@Query() query: any, @Request() req) {
+  findAll(@Query() query: any) {
     const { search } = query;
     return this.userService.getUsers(search);
   }

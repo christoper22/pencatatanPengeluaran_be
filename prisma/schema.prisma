@@ -27,16 +27,16 @@ model User {
   connection        Connection[]
   chat              Chat[]
   transactionDetail TransactionDetail[]
-  grup              Grup[]
+  group             Group[]
 }
 
 // table group for grouping user
-model Grup {
+model Group {
   id          String        @id @default(uuid()) @db.Char(36)
   groupName   String
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
-  deletedAt   DateTime
+  deletedAt   DateTime?
   userId      String?       @db.Char(36)
   connection  Connection[]
   chat        Chat[]
@@ -48,40 +48,40 @@ model Grup {
 // wallet for group
 model Wallet {
   id                String              @id @default(uuid()) @db.Char(36)
-  grupId            String?             @db.Char(36)
+  groupId           String?             @db.Char(36)
   name              String
   amount            Decimal
   target_amount     Decimal
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
-  deletedAt         DateTime
-  Grup              Grup?               @relation(fields: [grupId], references: [id])
+  deletedAt         DateTime?
+  Group             Group?              @relation(fields: [groupId], references: [id])
   transactionDetail TransactionDetail[]
 }
 
 // connection to group and user
 model Connection {
-  id        String   @id @default(uuid()) @db.Char(36)
-  userId    String?  @db.Char(36)
-  grupId    String?  @db.Char(36)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  deletedAt DateTime
-  User      User?    @relation(fields: [userId], references: [id])
-  Grup      Grup?    @relation(fields: [grupId], references: [id])
+  id        String    @id @default(uuid()) @db.Char(36)
+  userId    String?   @db.Char(36)
+  groupId   String?   @db.Char(36)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  User      User?     @relation(fields: [userId], references: [id])
+  Group     Group?    @relation(fields: [groupId], references: [id])
 }
 
 // table chat for user in the group
 model Chat {
-  id        String   @id @default(uuid()) @db.Char(36)
-  userId    String?  @db.Char(36)
-  grupId    String?  @db.Char(36)
+  id        String    @id @default(uuid()) @db.Char(36)
+  userId    String?   @db.Char(36)
+  groupId   String?   @db.Char(36)
   message   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  deletedAt DateTime
-  User      User?    @relation(fields: [userId], references: [id])
-  Grup      Grup?    @relation(fields: [grupId], references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  User      User?     @relation(fields: [userId], references: [id])
+  Group     Group?    @relation(fields: [groupId], references: [id])
 }
 
 enum trasactionType {
@@ -97,7 +97,7 @@ enum useType {
 // write the transation outside group
 model Transaction {
   id               String              @id @default(uuid()) @db.Char(36)
-  grupId           String?             @db.Char(36)
+  groupId          String?             @db.Char(36)
   date             DateTime
   amount           Decimal
   type             trasactionType      @default(IN)
@@ -105,8 +105,8 @@ model Transaction {
   note             String
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
-  deletedAt        DateTime
-  Grup             Grup?               @relation(fields: [grupId], references: [id])
+  deletedAt        DateTime?
+  Group            Group?              @relation(fields: [groupId], references: [id])
   transationDetail TransactionDetail[]
 }
 
@@ -121,7 +121,7 @@ model TransactionDetail {
   amount        Decimal
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
-  deletedAt     DateTime
+  deletedAt     DateTime?
   Transaction   Transaction?   @relation(fields: [transactionId], references: [id])
   User          User?          @relation(fields: [userId], references: [id])
   Wallet        Wallet?        @relation(fields: [walletId], references: [id])
