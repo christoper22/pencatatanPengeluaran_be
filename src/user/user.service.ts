@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { ConflictException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { RegisterUserDto } from './dto/register-user.dto';
 import * as bcrypt from 'bcrypt';
-import { LoginUserDTO } from './dto/login-user.dto';
+import { getUser, LoginUserDTO, RegisterUserDto } from './dto/user.dto';
 import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
@@ -20,16 +19,36 @@ export class UserService {
     return hashed;
   }
 
-  async getUsers(search: string) {
+  async getUsers(dataQuery: getUser) {
     const data = await this.prisma.user.findMany({
       where: {
         fullName: {
-          contains: search, // LIKE '%news%'
+          contains: dataQuery.search, // LIKE '%news%'
+        },
+      },
+      skip: (dataQuery.page - 1) * dataQuery.limit,
+      take: dataQuery.limit,
+    });
+    const count = await this.prisma.user.count({
+      where: {
+        fullName: {
+          contains: dataQuery.search, // LIKE '%news%'
         },
       },
     });
 
-    return { message: 'success get all user', data };
+    const totalPages = Math.ceil(count / dataQuery.limit);
+
+    return {
+      message: 'success get all user',
+      data,
+      meta: {
+        total: count,
+        page: dataQuery.page,
+        limit: dataQuery.limit,
+        totalPages,
+      },
+    };
   }
 
   async getUserById(id: string) {

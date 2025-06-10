@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import {
@@ -6,8 +9,8 @@ import {
   Get,
   Param,
   Patch,
-  Post,
   Query,
+  Post,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -20,11 +23,20 @@ export class GroupController {
   constructor(private groupService: GroupService) {}
 
   @UseGuards(JwtAuthGuard)
+  @Get()
+  findAll(@Query() query: any) {
+    const { search, page, limit } = query;
+
+    return this.groupService.getAllGroup({
+      search: search !== '' && search ? search : undefined,
+      page: page !== '' && page ? parseInt(page) : 1,
+      limit: limit !== '' && limit ? parseInt(limit) : 10,
+    });
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post()
   CreateGroup(@Body() data: groupDto, @Req() req) {
     return this.groupService.createGroup(data, req.user.userId);
   }
-  //   @Patch(':id')
-  //   updateGroup(@Param('id') id:string, @Body()) {
-  //   }
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Body,
@@ -10,8 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { RegisterUserDto } from './dto/register-user.dto';
-import { LoginUserDTO } from './dto/login-user.dto';
+import { LoginUserDTO, RegisterUserDto } from './dto/user.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 @Controller('user')
@@ -21,8 +21,13 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Get()
   findAll(@Query() query: any) {
-    const { search } = query;
-    return this.userService.getUsers(search);
+    const { search, page, limit } = query;
+
+    return this.userService.getUsers({
+      search: search !== '' && search ? search : undefined,
+      page: page !== '' && page ? parseInt(page) : 1,
+      limit: limit !== '' && limit ? parseInt(limit) : 10,
+    });
   }
 
   @UseGuards(JwtAuthGuard)
